@@ -71,7 +71,7 @@ sfdx-project.json
 ### 1. Clone or download the project
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/rimonandrew/generic-hierarchy-accelerator.git
 cd generic-hierarchy-accelerator
 ```
 
