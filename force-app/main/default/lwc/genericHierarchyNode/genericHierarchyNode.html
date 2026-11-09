@@ -1,0 +1,50 @@
+
+<template>
+    <div class="node-wrapper">
+        <div class={nodeClass}>
+            <div class="node-header">
+                <lightning-icon
+                    icon-name="standard:account"
+                    size="small"
+                    alternative-text="Record">
+                </lightning-icon>
+
+                <span class="node-title">
+                    {node.recordName}
+                </span>
+
+                <template if:true={node.isCurrent}>
+                    <lightning-badge label="Current Record">
+                    </lightning-badge>
+                </template>
+            </div>
+
+            <div class="node-details">
+                <template for:each={displayFields} for:item="field">
+                    <div key={field.fieldName} class="field-row">
+                        <span class="field-label">
+                            {field.fieldName}
+                        </span>
+                        <span class="field-value">
+                            {field.value}
+                        </span>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <template if:true={hasChildren}>
+            <div class="children-container">
+                <template for:each={node.children} for:item="child">
+                    <div key={child.recordId} class="child-item">
+                        <div class="connector"></div>
+
+                        <c-generic-hierarchy-node
+                            node={child}>
+                        </c-generic-hierarchy-node>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

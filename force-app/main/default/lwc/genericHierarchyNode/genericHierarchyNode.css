@@ -1,0 +1,86 @@
+
+:host {
+    display: block;
+    width: 100%;
+}
+
+.node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+}
+
+.hierarchy-node {
+    width: 280px;
+    max-width: 100%;
+    background: #ffffff;
+    border: 1px solid #d8dde6;
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.current-node {
+    border: 2px solid #0176d3;
+    background: #f0f8ff;
+}
+
+.node-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.node-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.node-details {
+    border-top: 1px solid #e5e5e5;
+    padding-top: 8px;
+}
+
+.field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 12px;
+}
+
+.field-label {
+    color: #706e6b;
+    font-weight: 600;
+}
+
+.field-value {
+    color: #181818;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.children-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.child-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.connector {
+    width: 2px;
+    height: 20px;
+    background: #aab7c4;
+}

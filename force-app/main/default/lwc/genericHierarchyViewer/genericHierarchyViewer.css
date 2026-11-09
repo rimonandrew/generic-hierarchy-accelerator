@@ -1,0 +1,11 @@
+
+:host {
+    display: block;
+    width: 100%;
+}
+
+.hierarchy-container {
+    width: 100%;
+    overflow-x: auto;
+    padding: 12px;
+}

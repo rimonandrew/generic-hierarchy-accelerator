@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Stores display configuration for each hierarchy level, including the level number and fields to display on hierarchy records.</description>
+    <label>Hierarchy Display Configuration</label>
+    <pluralLabel>Hierarchy Display Configurations</pluralLabel>
+    <visibility>Public</visibility>
+</CustomObject>

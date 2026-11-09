@@ -1,0 +1,33 @@
+
+<template>
+    <lightning-card title="Hierarchy Viewer" icon-name="standard:account">
+        <div class="slds-p-around_medium">
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Loading hierarchy"
+                    size="medium">
+                </lightning-spinner>
+            </template>
+
+            <template if:true={hasError}>
+                <div class="slds-text-color_error">{error}</div>
+            </template>
+
+            <template if:true={hasHierarchy}>
+                <div class="hierarchy-container">
+                    <c-generic-hierarchy-node
+                        node={hierarchy.root}>
+                    </c-generic-hierarchy-node>
+                </div>
+            </template>
+
+            <template if:false={isLoading}>
+                <template if:false={hasHierarchy}>
+                    <template if:false={hasError}>
+                        <p>No hierarchy records found.</p>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>
