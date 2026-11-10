@@ -5,7 +5,7 @@ import getHierarchy from '@salesforce/apex/GenericHierarchyController.getHierarc
 
 export default class GenericHierarchyViewer extends LightningElement {
     @api recordId;
-    @api configurationName = 'Account_Hierarchy';
+    @api configurationName = '';
 
     hierarchy;
     error;

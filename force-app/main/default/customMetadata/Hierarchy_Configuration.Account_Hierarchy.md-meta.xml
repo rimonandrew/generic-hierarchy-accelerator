@@ -12,6 +12,6 @@
     </values>
     <values>
         <field>Parent_Field_API_Name__c</field>
-        <value xsi:type="xsd:string">Generic_Parent_Account__c</value>
+        <value xsi:type="xsd:string">ParentId</value>
     </values>
 </CustomMetadata>

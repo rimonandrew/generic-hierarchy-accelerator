@@ -1,28 +1,54 @@
-﻿# Generic Hierarchy Accelerator for Salesforce
+# Generic Hierarchy Accelerator for Salesforce
 
-A reusable, metadata-driven Salesforce solution for displaying record hierarchies across standard and custom objects.
+**Version:** 1.4.0
+**Publisher:** Brite Systems
+**Package Type:** Salesforce 1GP Unmanaged Package
+**Release:** Beta
 
-The Generic Hierarchy Accelerator uses Apex, Lightning Web Components (LWC), and Custom Metadata Types to render configurable parent-child relationships without hardcoding object-specific hierarchy logic.
+## Overview
+
+Generic Hierarchy Accelerator is a reusable, metadata-driven Salesforce solution that displays record hierarchies using Lightning Web Components (LWC), Apex, and Custom Metadata Types.
+
+Version 1.4.0 supports two standard Salesforce objects:
+
+- **Account:** Uses the standard `ParentId` relationship.
+- **Contact:** Uses the standard `ReportsToId` relationship.
+
+The component automatically identifies the current record's object and loads the corresponding hierarchy configuration. Users do not need to manually select a configuration when adding the component to a Lightning Record Page.
+
+The solution supports up to five hierarchy levels and works with existing Salesforce records and relationships.
 
 ## Features
 
+- Supports standard Account and Contact hierarchies.
+- Automatically detects the current record's object.
+- Uses Account `ParentId` for Account hierarchies.
+- Uses Contact `ReportsToId` for Contact hierarchies.
 - Supports up to five hierarchy levels.
-- Configurable Salesforce objects and parent relationship fields.
-- Configurable fields displayed at each hierarchy level.
-- Reusable across Account, Contact, and supported custom objects.
+- Metadata-driven hierarchy configuration.
+- Configurable display fields at each hierarchy level.
 - Recursive Lightning Web Component rendering.
 - Dynamic SOQL with user-mode access enforcement.
 - Apex sharing enforcement.
-- Configuration changes through Custom Metadata Types without changing Apex or LWC code.
-- Permission Set for Apex controller access.
-- Supports custom parent relationship fields, including the sample Account lookup field.
+- Custom Metadata-based configuration.
+- Dedicated permission set for Apex controller access.
+- No additional custom parent relationship fields required.
+
+## Supported Objects
+
+| Salesforce Object | Parent Relationship Field | Configuration |
+|---|---|---|
+| Account | `ParentId` | `Account_Hierarchy` |
+| Contact | `ReportsToId` | `Contact_Hierarchy` |
+
+**Release scope:** Version 1.4.0 is designed and packaged for standard Account and Contact hierarchies. Support for additional custom objects is outside the scope of this release.
 
 ## Architecture
 
 | Component | API Name | Purpose |
 |---|---|---|
 | Apex Controller | `GenericHierarchyController` | Reads metadata and retrieves hierarchy records |
-| Parent LWC | `genericHierarchyViewer` | Loads and displays the hierarchy |
+| Parent LWC | `genericHierarchyViewer` | Detects the current object and displays its hierarchy |
 | Recursive Child LWC | `genericHierarchyNode` | Renders individual hierarchy nodes |
 | Configuration CMDT | `Hierarchy_Configuration__mdt` | Defines object and parent relationship |
 | Display CMDT | `Hierarchy_Display_Configuration__mdt` | Defines fields displayed at each level |
@@ -30,88 +56,114 @@ The Generic Hierarchy Accelerator uses Apex, Lightning Web Components (LWC), and
 
 ## Prerequisites
 
-- Salesforce Developer Edition, Sandbox, or compatible Salesforce org.
-- Salesforce CLI.
-- VS Code with Salesforce Extension Pack.
-- Access to deploy Apex, Lightning Web Components, Custom Metadata Types, Custom Fields, and Permission Sets.
+For package installation and configuration:
 
-## Project Structure
+- A compatible Salesforce org.
+- Salesforce administrator access to install packages.
+- Permission to assign permission sets.
+- Permission to edit and activate Lightning Record Pages.
 
-```text
-force-app/
-  main/
-    default/
-      classes/
-        GenericHierarchyController.cls
-        GenericHierarchyControllerTest.cls
-      customMetadata/
-        Hierarchy_Configuration.*
-        Hierarchy_Display_Configuration.*
-      lwc/
-        genericHierarchyViewer/
-        genericHierarchyNode/
-      objects/
-        Account/
-          fields/
-            Generic_Parent_Account__c.field-meta.xml
-        Hierarchy_Configuration__mdt/
-        Hierarchy_Display_Configuration__mdt/
-      permissionsets/
-        Generic_Hierarchy_User.permissionset-meta.xml
-
-manifest/
-  package.xml
-
-README.md
-sfdx-project.json
-```
+**Important:** Customers do not need Salesforce CLI, Visual Studio Code, or a source-code deployment to install and configure the released package.
 
 ## Installation
 
-### 1. Clone or download the project
+### 1. Install the Package
 
-```bash
-git clone https://github.com/rimonandrew/generic-hierarchy-accelerator.git
-cd generic-hierarchy-accelerator
-```
+Use the Salesforce package installation link provided by Brite Systems.
 
-### 2. Authorize your Salesforce org
+For the current beta version:
 
-```bash
-sf org login web --alias GenericHierarchyDev
-```
+[Install Generic Hierarchy Accelerator v1.4.0](https://login.salesforce.com/packaging/installPackage.apexp?p0=04tak000000tEtZAAU)
 
-### 3. Deploy the solution
+Before proceeding, verify that the installation page displays:
 
-```bash
-sf project deploy start --manifest manifest/package.xml --target-org GenericHierarchyDev
-```
+- Package: Generic Hierarchy Accelerator
+- Version: 1.4.0
 
-For deployment validation without deploying the changes:
+Choose the appropriate installation access option and complete the installation.
 
-```bash
-sf project deploy validate --manifest manifest/package.xml --target-org GenericHierarchyDev --test-level RunLocalTests
-```
+For a sandbox org, use the corresponding Salesforce test login domain with the package installation path.
 
-### 4. Assign the permission set
+### 2. Verify Package Installation
 
-```bash
-sf org assign permset --name Generic_Hierarchy_User --target-org GenericHierarchyDev
-```
+1. Open Salesforce Setup.
+2. Search for **Installed Packages**.
+3. Locate Generic Hierarchy Accelerator.
+4. Verify that version 1.4.0 is installed.
+
+### 3. Assign the Permission Set
+
+1. Open Setup.
+2. Navigate to Permission Sets.
+3. Open `Generic Hierarchy User`.
+4. Select Manage Assignments.
+5. Assign the permission set to the users who need to view hierarchies.
 
 The permission set grants access to `GenericHierarchyController`.
 
-Users must also have the necessary object and field read permissions for the configured hierarchy objects and display fields. The controller enforces record sharing and user-mode query access.
+Users must also have the required object-level and field-level read permissions for the records and fields displayed in the hierarchy.
 
-**Important:** The sample Custom Metadata configuration records are maintained in the source repository. If they are not included in the installed unmanaged package version, deploy them separately from the source project.
+### 4. Add the Component to the Account Record Page
 
-## Configuration
+1. Open an Account record.
+2. Select Setup and navigate to Lightning App Builder.
+3. Open the Account Record Page.
+4. Drag **Generic Hierarchy Viewer** onto the page.
+5. Leave the **Hierarchy Configuration Developer Name** property blank.
+6. Save and activate the page.
 
-The accelerator is controlled through two Custom Metadata Types.
+The component automatically detects the Account object and loads the Account hierarchy configuration.
+
+### 5. Add the Component to the Contact Record Page
+
+1. Open a Contact record.
+2. Navigate to Lightning App Builder.
+3. Open the Contact Record Page.
+4. Drag **Generic Hierarchy Viewer** onto the page.
+5. Leave the **Hierarchy Configuration Developer Name** property blank.
+6. Save and activate the page.
+
+The component automatically detects the Contact object and loads the Contact hierarchy configuration.
+
+### 6. View the Hierarchy
+
+Open an Account or Contact record that has an existing parent relationship.
+
+The component retrieves and displays the hierarchy based on the standard Salesforce relationship field.
+
+No additional parent lookup fields or manual configuration selection are required.
+
+## How Automatic Configuration Detection Works
+
+The component uses the current Salesforce record ID to identify the object's API name.
+
+The Apex controller then:
+
+1. Identifies the current record's Salesforce object.
+2. Retrieves the active hierarchy configuration for that object.
+3. Identifies the configured parent relationship field.
+4. Retrieves the corresponding display configuration records.
+5. Builds the hierarchy up to five levels.
+6. Returns the hierarchy data to the Lightning Web Component.
+
+### Default Hierarchy Configurations
+
+| Developer Name | Object API Name | Parent Field | Active |
+|---|---|---|---|
+| `Account_Hierarchy` | Account | `ParentId` | True |
+| `Contact_Hierarchy` | Contact | `ReportsToId` | True |
+
+The configuration property on the Lightning Web Component can remain blank for automatic detection.
+
+An explicit configuration name is available for scenarios where a specific configuration needs to be selected.
+
+## Custom Metadata Configuration
+
+The accelerator uses two Custom Metadata Types.
 
 ### 1. Hierarchy Configuration
 
-Custom Metadata Type: `Hierarchy_Configuration__mdt`
+**Custom Metadata Type:** `Hierarchy_Configuration__mdt`
 
 | Field | Purpose |
 |---|---|
@@ -119,40 +171,35 @@ Custom Metadata Type: `Hierarchy_Configuration__mdt`
 | `Parent_Field_API_Name__c` | Field defining the parent relationship |
 | `Is_Active__c` | Enables or disables the configuration |
 
-Each configuration record uses its Developer Name as the configuration name passed to the LWC.
-
-Example:
-
-| Developer Name | Object | Parent Field | Active |
-|---|---|---|---|
-| `Account_Hierarchy` | Account | `Generic_Parent_Account__c` | True |
-| `Contact_Hierarchy` | Contact | `ReportsToId` | True |
+The packaged configuration records define the Account and Contact hierarchy relationships.
 
 ### 2. Hierarchy Display Configuration
 
-Custom Metadata Type: `Hierarchy_Display_Configuration__mdt`
+**Custom Metadata Type:** `Hierarchy_Display_Configuration__mdt`
 
 | Field | Purpose |
 |---|---|
-| `Configuration_Key__c` | Links the display record to its hierarchy configuration |
-| `Object_API_Name__c` | Object API name |
+| `Configuration_Key__c` | Links the display configuration to its hierarchy configuration |
+| `Object_API_Name__c` | Salesforce object API name |
 | `Hierarchy_Level__c` | Hierarchy level from 1 to 5 |
 | `Display_Fields__c` | Comma-separated fields to display |
 | `Is_Active__c` | Enables or disables the display configuration |
 
-Example Account configuration:
+Each supported object has up to five display configuration records.
 
-| Level | Display Fields |
+#### Example Account Display Fields
+
+| Level | Example Display Fields |
 |---|---|
-| 1 | `Name,Industry,Website` |
-| 2 | `Name,Phone` |
+| 1 | `Name,Phone` |
+| 2 | `Name,AccountNumber,Phone,Type` |
 | 3 | `Name,AccountNumber,Phone,Type` |
 | 4 | `Name,AccountNumber,Phone,Type` |
 | 5 | `Name,AccountNumber,Phone,Type` |
 
-Example Contact configuration:
+#### Example Contact Display Fields
 
-| Level | Display Fields |
+| Level | Example Display Fields |
 |---|---|
 | 1 | `Name,Title,Email` |
 | 2 | `Name,Title,Email` |
@@ -160,77 +207,192 @@ Example Contact configuration:
 | 4 | `Name,Title,Email` |
 | 5 | `Name,Title,Email` |
 
-The configuration key must match the Developer Name of the corresponding Hierarchy Configuration record.
+Display fields can be maintained through Custom Metadata without modifying Apex or LWC code, subject to the controller's supported schema and security checks.
 
-## Add the LWC to a Lightning Record Page
+## Relationship Requirements
 
-1. Open Salesforce Setup.
-2. Navigate to Lightning App Builder.
-3. Create or edit a Lightning Record Page.
-4. Drag **Generic Hierarchy Viewer** onto the page.
-5. Set the Hierarchy Configuration Developer Name property.
+### Account Hierarchy
 
-Examples:
+The Account hierarchy uses Salesforce's standard Parent Account relationship.
 
-- Account record page: `Account_Hierarchy`
-- Contact record page: `Contact_Hierarchy`
+Field:
 
-6. Save and activate the page.
-7. Open a record to view its hierarchy.
+`Account.ParentId`
 
-The component uses the current record ID and the selected configuration to retrieve the hierarchy.
+Example:
 
-## Configure a New Object
+```text
+GHA Global Corporation
+    +-- GHA India
+          +-- GHA Tamil Nadu
+                +-- GHA Chennai
+                      +-- GHA Chennai Branch
+```
 
-To support another object:
+### Contact Hierarchy
 
-1. Identify the object API name.
-2. Identify a parent relationship field that references the same object.
-3. Create a Hierarchy Configuration record.
-4. Set the object API name, parent field API name, and active status.
-5. Create up to five Hierarchy Display Configuration records.
-6. Set the matching configuration key, object API name, hierarchy level, display fields, and active status.
-7. Add Generic Hierarchy Viewer to the object's Lightning Record Page.
-8. Set its configuration Developer Name.
+The Contact hierarchy uses Salesforce's standard Reports To relationship.
 
-No object-specific Apex or LWC changes should be required when the object and relationship satisfy the controller's supported schema requirements.
+Field:
 
-## Testing
+`Contact.ReportsToId`
 
-The project includes `GenericHierarchyControllerTest`.
+Example:
 
-Run local Apex tests:
+```text
+GHA Contact1 - CEO
+    +-- GHA Contact2 - Director
+          +-- GHA Contact3 - Manager
+                +-- GHA Contact4 - Team Lead
+                      +-- GHA Contact5 - Employee
+```
+
+The relationships must be saved on the Salesforce records before the component can display them.
+
+## Developer Setup
+
+This section is intended for developers who want to work with the source project rather than install the released package.
+
+### Prerequisites
+
+- Salesforce CLI.
+- Visual Studio Code.
+- Salesforce Extension Pack.
+- Access to a Salesforce development org.
+
+### Project Structure
+
+```text
+generic-hierarchy-accelerator/
+�
++-- force-app/
+�   +-- main/
+�       +-- default/
+�           +-- classes/
+�           �   +-- GenericHierarchyController.cls
+�           �   +-- GenericHierarchyControllerTest.cls
+�           �
+�           +-- customMetadata/
+�           �   +-- Hierarchy_Configuration.*
+�           �   +-- Hierarchy_Display_Configuration.*
+�           �
+�           +-- lwc/
+�           �   +-- genericHierarchyViewer/
+�           �   +-- genericHierarchyNode/
+�           �
+�           +-- objects/
+�           �   +-- Hierarchy_Configuration__mdt/
+�           �   +-- Hierarchy_Display_Configuration__mdt/
+�           �
+�           +-- permissionsets/
+�               +-- Generic_Hierarchy_User.permissionset-meta.xml
+�
++-- manifest/
+�   +-- package.xml
+�
++-- README.md
++-- sfdx-project.json
+```
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/rimonandrew/generic-hierarchy-accelerator.git
+
+cd generic-hierarchy-accelerator
+```
+
+### Authorize a Development Org
+
+```bash
+sf org login web --alias GenericHierarchyDev
+```
+
+### Deploy the Source
+
+```bash
+sf project deploy start --manifest manifest/package.xml --target-org GenericHierarchyDev
+```
+
+### Assign the Permission Set
+
+```bash
+sf org assign permset --name Generic_Hierarchy_User --target-org GenericHierarchyDev
+```
+
+### Run Apex Tests
 
 ```bash
 sf apex run test --class-names GenericHierarchyControllerTest --target-org GenericHierarchyDev --result-format human --wait 30
 ```
 
-### Automated validation
+## Testing
 
-The latest deployment validation against a fresh Salesforce Developer Edition org completed successfully:
+The project includes the Apex test class:
 
-- **28 metadata components validated successfully.**
-- **16 Apex tests passed.**
-- **0 Apex test failures.**
-- Target org: Fresh Salesforce Developer Edition.
+`GenericHierarchyControllerTest`
 
-### Manual testing
+### Latest Regression Test Results
 
-Manual validation has covered:
+The updated implementation was deployed and tested in both the development org and the original package org.
+
+| Metric | Result |
+|---|---:|
+| Tests executed | 17 |
+| Passed | 17 |
+| Failed | 0 |
+| Pass rate | 100% |
+
+### Test Coverage
+
+The test suite covers:
+
+- Five-level Account hierarchy.
+- Five-level Contact hierarchy.
+- Account hierarchy from root records.
+- Account hierarchy from middle-level records.
+- Contact hierarchy from root records.
+- Contact hierarchy from middle-level records.
+- Multiple children under the same parent.
+- Maximum five-level restriction.
+- Automatic configuration resolution.
+- Invalid configuration handling.
+- Object configuration mismatch.
+- Deleted record handling.
+- Null record ID handling.
+- Objects without hierarchy configuration.
+- Ancestor cycle detection.
+
+### Manual Validation Areas
+
+Development validation has included:
 
 - Account and Contact hierarchy rendering.
 - Five-level hierarchy structures.
 - Middle-level record navigation.
 - Multiple children and branching hierarchies.
-- Custom parent relationship fields.
+- Standard Account parent relationship using `ParentId`.
+- Standard Contact Reports To relationship using `ReportsToId`.
 - Metadata-driven display field changes.
 - Empty hierarchies and invalid or inactive configurations.
 - Object-level and field-level access restrictions.
 - A 200-record hierarchy dataset.
 
-The 200-record test completed successfully in the development environment. Further large-volume and concurrent-user testing is recommended before production adoption.
+The 200-record test was a development validation and is not a production-scale performance guarantee.
+
+### Package Validation Status
+
+Version 1.4.0 was successfully uploaded as a beta package version.
+
+The Apex regression suite passed in both the development org and the original package org.
+
+Version 1.4.0 was successfully installed in a clean Salesforce Developer Edition org. Account and Contact hierarchy rendering was manually verified after installation.
+
+Broader production-scale performance, concurrent-user, and customer acceptance testing is still recommended before production adoption.
 
 ## Security
+
+The solution follows Salesforce security practices:
 
 - Apex controller uses `with sharing`.
 - Dynamic queries use user-mode access enforcement.
@@ -241,30 +403,36 @@ The 200-record test completed successfully in the development environment. Furth
 
 ## Current Limitations
 
+- Supports Account and Contact hierarchies in version 1.4.0.
 - Maximum supported hierarchy depth: five levels.
-- The current implementation retrieves child records without pagination or a configurable record cap. Very large hierarchies require additional scalability testing.
+- Uses standard Account `ParentId` and Contact `ReportsToId` relationships.
+- The current implementation retrieves child records without pagination or a configurable record cap.
+- Very large hierarchies require additional scalability testing.
 - Hierarchy rendering depends on valid configuration metadata and accessible relationship fields.
-- The 200-record test is a development validation, not a production-scale performance guarantee.
-- The solution should undergo broader fresh-org installation, security, and data-volume testing before production adoption.
+- Production-scale performance and concurrent-user testing are still recommended.
 
 ## Package Contents
 
-The source project contains:
+The package includes:
 
-- `GenericHierarchyController` and `GenericHierarchyControllerTest`.
-- `Hierarchy_Configuration__mdt` and `Hierarchy_Display_Configuration__mdt`.
-- Sample Custom Metadata configuration records for Account and Contact.
-- `Generic_Parent_Account__c` custom Account lookup field.
-- `genericHierarchyViewer` and `genericHierarchyNode` Lightning Web Components.
+- `GenericHierarchyController`
+- `GenericHierarchyControllerTest`
+- `Hierarchy_Configuration__mdt`
+- `Hierarchy_Display_Configuration__mdt`
+- Account hierarchy configuration records.
+- Contact hierarchy configuration records.
+- Five-level display configuration records for Account and Contact.
+- `genericHierarchyViewer` Lightning Web Component.
+- `genericHierarchyNode` Lightning Web Component.
 - `Generic_Hierarchy_User` permission set.
-- Deployment manifest and project configuration files.
 
-The sample Custom Metadata configuration records are maintained in the source repository. When installing the unmanaged package, deploy these records separately if they are not included in the package version.
-
-The Account sample configuration requires the `Generic_Parent_Account__c` lookup field.
-
-Diagnostic classes used during development are not included in the project package manifest.
+No additional custom Account parent lookup field is required.
 
 ## License
 
 Add your chosen license and distribution terms before publishing or distributing this project.
+
+---
+
+**Generic Hierarchy Accelerator | Brite Systems**
+Version 1.4.0 | Beta Release

@@ -7,7 +7,7 @@ private class GenericHierarchyControllerTest {
 
         String suffix = String.valueOf(DateTime.now().getTime());
 
-        // Account hierarchy
+        // Account hierarchy using standard ParentId.
         Account a1 = new Account(
             Name = 'Automated Test Account L1 ' + suffix,
             AccountNumber = 'T001' + suffix.right(5)
@@ -17,36 +17,32 @@ private class GenericHierarchyControllerTest {
         Account a2 = new Account(
             Name = 'Automated Test Account L2 ' + suffix,
             AccountNumber = 'T002' + suffix.right(5),
-            ParentId = a1.Id,
-            Generic_Parent_Account__c = a1.Id
+            ParentId = a1.Id
         );
         insert a2;
 
         Account a3 = new Account(
             Name = 'Automated Test Account L3 ' + suffix,
             AccountNumber = 'T003' + suffix.right(5),
-            ParentId = a2.Id,
-            Generic_Parent_Account__c = a2.Id
+            ParentId = a2.Id
         );
         insert a3;
 
         Account a4 = new Account(
             Name = 'Automated Test Account L4 ' + suffix,
             AccountNumber = 'T004' + suffix.right(5),
-            ParentId = a3.Id,
-            Generic_Parent_Account__c = a3.Id
+            ParentId = a3.Id
         );
         insert a4;
 
         Account a5 = new Account(
             Name = 'Automated Test Account L5 ' + suffix,
             AccountNumber = 'T005' + suffix.right(5),
-            ParentId = a4.Id,
-            Generic_Parent_Account__c = a4.Id
+            ParentId = a4.Id
         );
         insert a5;
 
-        // Contact hierarchy
+        // Contact hierarchy using standard ReportsToId.
         Contact c1 = new Contact(
             FirstName = 'AutoTest',
             LastName = 'Hierarchy L1 ' + suffix,
@@ -510,7 +506,7 @@ private class GenericHierarchyControllerTest {
         System.assertEquals(true, exceptionThrown);
     }
 
-    // NEW TEST 1: Multiple children under the same parent.
+    // Multiple children under the same parent.
     @IsTest
     static void testMultipleChildrenUnderSameParent() {
 
@@ -523,14 +519,12 @@ private class GenericHierarchyControllerTest {
 
         Account child1 = new Account(
             Name = 'Multiple Children Child 1 ' + suffix,
-            ParentId = parent.Id,
-            Generic_Parent_Account__c = parent.Id
+            ParentId = parent.Id
         );
 
         Account child2 = new Account(
             Name = 'Multiple Children Child 2 ' + suffix,
-            ParentId = parent.Id,
-            Generic_Parent_Account__c = parent.Id
+            ParentId = parent.Id
         );
 
         insert new List<Account>{ child1, child2 };
@@ -555,7 +549,7 @@ private class GenericHierarchyControllerTest {
         );
     }
 
-    // NEW TEST 2: Hierarchy must stop at five levels.
+    // Hierarchy must stop at five levels.
     @IsTest
     static void testHierarchyStopsAtMaximumFiveLevels() {
 
@@ -575,8 +569,7 @@ private class GenericHierarchyControllerTest {
 
         Account level6 = new Account(
             Name = 'Automated Test Account L6',
-            ParentId = level5.Id,
-            Generic_Parent_Account__c = level5.Id
+            ParentId = level5.Id
         );
 
         insert level6;
@@ -606,52 +599,53 @@ private class GenericHierarchyControllerTest {
             'The hierarchy should stop at level five.'
         );
     }
+
     @IsTest
-static void testAncestorCycleDetection() {
+    static void testAncestorCycleDetection() {
 
-    Account accountA = new Account(
-        Name = 'Cycle Test Account A'
-    );
-    insert accountA;
+        Account accountA = new Account(
+            Name = 'Cycle Test Account A'
+        );
+        insert accountA;
 
-    Account accountB = new Account(
-        Name = 'Cycle Test Account B'
-    );
-    insert accountB;
+        Account accountB = new Account(
+            Name = 'Cycle Test Account B'
+        );
+        insert accountB;
 
-    Set<Id> visitedIds = new Set<Id>{
-        accountA.Id,
-        accountB.Id
-    };
+        Set<Id> visitedIds = new Set<Id>{
+            accountA.Id,
+            accountB.Id
+        };
 
-    // A previously visited ancestor must be detected.
-    System.assertEquals(
-        true,
-        GenericHierarchyController.isAncestorAlreadyVisited(
-            visitedIds,
-            accountA.Id
-        ),
-        'A previously visited ancestor should be detected.'
-    );
+        // A previously visited ancestor must be detected.
+        System.assertEquals(
+            true,
+            GenericHierarchyController.isAncestorAlreadyVisited(
+                visitedIds,
+                accountA.Id
+            ),
+            'A previously visited ancestor should be detected.'
+        );
 
-    // A new ancestor must not be treated as a cycle.
-    System.assertEquals(
-        false,
-        GenericHierarchyController.isAncestorAlreadyVisited(
-            visitedIds,
-            UserInfo.getUserId()
-        ),
-        'An unvisited ID should not be treated as a cycle.'
-    );
+        // A new ancestor must not be treated as a cycle.
+        System.assertEquals(
+            false,
+            GenericHierarchyController.isAncestorAlreadyVisited(
+                visitedIds,
+                UserInfo.getUserId()
+            ),
+            'An unvisited ID should not be treated as a cycle.'
+        );
 
-    // A null parent must stop ancestor traversal.
-    System.assertEquals(
-        true,
-        GenericHierarchyController.isAncestorAlreadyVisited(
-            visitedIds,
-            null
-        ),
-        'A null ancestor should stop traversal.'
-    );
-}
+        // A null parent must stop ancestor traversal.
+        System.assertEquals(
+            true,
+            GenericHierarchyController.isAncestorAlreadyVisited(
+                visitedIds,
+                null
+            ),
+            'A null ancestor should stop traversal.'
+        );
+    }
 }

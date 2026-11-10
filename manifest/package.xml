@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 
     <types>
@@ -27,11 +27,6 @@
         <members>Hierarchy_Display_Configuration.Contact_Level_4</members>
         <members>Hierarchy_Display_Configuration.Contact_Level_5</members>
         <name>CustomMetadata</name>
-    </types>
-
-    <types>
-        <members>Account.Generic_Parent_Account__c</members>
-        <name>CustomField</name>
     </types>
 
     <types>

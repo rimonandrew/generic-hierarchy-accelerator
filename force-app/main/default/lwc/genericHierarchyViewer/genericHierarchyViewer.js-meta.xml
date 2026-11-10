@@ -3,7 +3,7 @@
     <apiVersion>68.0</apiVersion>
     <isExposed>true</isExposed>
     <masterLabel>Generic Hierarchy Viewer</masterLabel>
-    <description>Metadata-driven hierarchy viewer for configured Salesforce objects.</description>
+    <description>Universal metadata-driven Salesforce hierarchy viewer with automatic configuration detection.</description>
     <targets>
         <target>lightning__RecordPage</target>
         <target>lightning__AppPage</target>
@@ -15,7 +15,7 @@
                 name="configurationName"
                 type="String"
                 label="Hierarchy Configuration Developer Name"
-                default="Account_Hierarchy"/>
+                description="Leave blank for automatic configuration detection. Specify a name for custom configurations."/>
         </targetConfig>
     </targetConfigs>
 </LightningComponentBundle>
