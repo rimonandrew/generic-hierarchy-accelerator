@@ -1,3 +1,4 @@
+
 import { LightningElement, api, wire } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import getHierarchy from '@salesforce/apex/GenericHierarchyController.getHierarchy';
@@ -22,6 +23,8 @@ export default class GenericHierarchyViewer extends LightningElement {
 
             if (currentRecordId) {
                 this.pageRecordId = currentRecordId;
+                this.error = undefined;
+                this.isLoading = true;
             } else {
                 this.isLoading = false;
                 this.error =
@@ -53,6 +56,7 @@ export default class GenericHierarchyViewer extends LightningElement {
     get hasError() {
         return !!this.error;
     }
+
     get isChildrenTruncated() {
         return this.hierarchy?.childrenTruncated === true;
     }

@@ -1,3 +1,4 @@
+
 public with sharing class GenericHierarchyController {
 
     private static final Integer MAX_LEVELS = 5;
@@ -43,6 +44,7 @@ public with sharing class GenericHierarchyController {
         if (recordId == null) {
             throw new AuraHandledException('Record ID is required.');
         }
+
 
         String actualObjectName =
             recordId.getSObjectType().getDescribe().getName();
@@ -96,7 +98,7 @@ public with sharing class GenericHierarchyController {
                 'The configuration object does not match the current record.'
             );
         }
-        Schema.DescribeSObjectResult objectDescribe =
+                Schema.DescribeSObjectResult objectDescribe =
             recordId.getSObjectType().getDescribe();
 
         if (!objectDescribe.isAccessible()) {
@@ -179,13 +181,14 @@ public with sharing class GenericHierarchyController {
 
         // Add Name to the query when available and accessible.
         // This prevents an unselected-field exception for recordName.
-        Boolean canReadName =
-            fieldMap.containsKey('Name') &&
-            fieldMap.get('Name').getDescribe().isAccessible();
+       Boolean canReadName =
+    fieldMap.containsKey('Name') &&
+    fieldMap.get('Name').getDescribe().isAccessible();
 
-        if (canReadName) {
-            allSelectedFields.add('Name');
-        }
+if (canReadName) {
+    allSelectedFields.add('Name');
+}
+
 
         // Validate and prepare configured display fields.
         for (Hierarchy_Display_Configuration__mdt displayConfig :
@@ -260,8 +263,7 @@ public with sharing class GenericHierarchyController {
         );
 
         // Find the highest accessible ancestor within five levels.
-        // Each of at most four iterations checks the current record and
-        // verifies that its parent is accessible before moving the root.
+        // This uses a maximum of four bounded ancestor queries.
         Id rootId = recordId;
 
         Set<Id> ancestorIds = new Set<Id>{recordId};
@@ -330,6 +332,7 @@ public with sharing class GenericHierarchyController {
 
         Set<Id> currentLevelIds = new Set<Id>{rootId};
         Boolean childrenTruncated = false;
+        List<SObject> preloadedLevelRecords;
 
         // Retrieve and construct up to five hierarchy levels.
         for (Integer level = 1; level <= MAX_LEVELS; level++) {
@@ -338,15 +341,24 @@ public with sharing class GenericHierarchyController {
                 break;
             }
 
-            List<SObject> levelRecords = Database.queryWithBinds(
-                'SELECT ' + queryFields +
-                ' FROM ' + objectApiName +
-                ' WHERE Id IN :recordIds',
-                new Map<String, Object>{
-                    'recordIds' => currentLevelIds
-                },
-                AccessLevel.USER_MODE
-            );
+            List<SObject> levelRecords;
+
+            // Child records were already queried with all required fields
+            // at the end of the previous iteration.
+            if (preloadedLevelRecords != null) {
+                levelRecords = preloadedLevelRecords;
+                preloadedLevelRecords = null;
+            } else {
+                levelRecords = Database.queryWithBinds(
+                    'SELECT ' + queryFields +
+                    ' FROM ' + objectApiName +
+                    ' WHERE Id IN :recordIds',
+                    new Map<String, Object>{
+                        'recordIds' => currentLevelIds
+                    },
+                    AccessLevel.USER_MODE
+                );
+            }
 
             for (SObject record : levelRecords) {
 
@@ -380,9 +392,10 @@ public with sharing class GenericHierarchyController {
                 }
 
                 // Resolve the record title.
-                if (canReadName) {
-                    node.recordName =
-                        String.valueOf(record.get('Name'));
+               if (canReadName) {
+
+    node.recordName =
+        String.valueOf(record.get('Name'));
 
                 } else if (levelFields != null &&
                            !levelFields.isEmpty()) {
@@ -413,7 +426,7 @@ public with sharing class GenericHierarchyController {
             // Retrieve at most 200 children across this entire hierarchy level.
             // Fetch one extra row to detect whether the result was truncated.
             List<SObject> childRecords = Database.queryWithBinds(
-                'SELECT Id, ' + parentField +
+                'SELECT ' + queryFields +
                 ' FROM ' + objectApiName +
                 ' WHERE ' + parentField + ' IN :parentIds' +
                 ' ORDER BY Id LIMIT ' + (MAX_CHILDREN_PER_LEVEL + 1),
@@ -427,6 +440,10 @@ public with sharing class GenericHierarchyController {
                 childrenTruncated = true;
                 childRecords.remove(childRecords.size() - 1);
             }
+
+            // Reuse these USER_MODE query results as the next level.
+            // This avoids a second query for the same child records.
+            preloadedLevelRecords = childRecords;
 
             Set<Id> nextLevelIds = new Set<Id>();
 
@@ -483,5 +500,4 @@ public with sharing class GenericHierarchyController {
 
         return response;
     }
-
 }
