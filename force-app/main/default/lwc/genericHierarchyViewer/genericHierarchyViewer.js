@@ -10,10 +10,32 @@ export default class GenericHierarchyViewer extends LightningElement {
     pageRecordId;
     hierarchy;
     error;
-    isLoading = true;
+    _isLoading = true;
 
     get effectiveRecordId() {
         return this.recordId || this.pageRecordId;
+    }
+
+    // Only show the spinner when a record ID exists
+    // and the hierarchy is still loading.
+    get isLoading() {
+        return Boolean(this.effectiveRecordId) && this._isLoading;
+    }
+
+    get hasError() {
+        return Boolean(this.error) || !this.effectiveRecordId;
+    }
+
+    get errorMessage() {
+        if (this.error) {
+            return this.error;
+        }
+
+        if (!this.effectiveRecordId) {
+            return 'This component requires a record page with a valid record ID.';
+        }
+
+        return '';
     }
 
     @wire(CurrentPageReference)
@@ -24,11 +46,7 @@ export default class GenericHierarchyViewer extends LightningElement {
             if (currentRecordId) {
                 this.pageRecordId = currentRecordId;
                 this.error = undefined;
-                this.isLoading = true;
-            } else {
-                this.isLoading = false;
-                this.error =
-                    'This component requires a record page with a valid record ID.';
+                this._isLoading = true;
             }
         }
     }
@@ -41,20 +59,16 @@ export default class GenericHierarchyViewer extends LightningElement {
         if (data) {
             this.hierarchy = data;
             this.error = undefined;
-            this.isLoading = false;
+            this._isLoading = false;
         } else if (error) {
             this.hierarchy = undefined;
             this.error = this.getErrorMessage(error);
-            this.isLoading = false;
+            this._isLoading = false;
         }
     }
 
     get hasHierarchy() {
-        return !!this.hierarchy?.root;
-    }
-
-    get hasError() {
-        return !!this.error;
+        return Boolean(this.hierarchy?.root);
     }
 
     get isChildrenTruncated() {
