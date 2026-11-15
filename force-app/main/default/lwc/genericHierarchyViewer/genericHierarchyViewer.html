@@ -1,4 +1,3 @@
-
 <template>
     <lightning-card title="Hierarchy Viewer" icon-name="standard:account">
         <div class="slds-p-around_medium">
@@ -11,6 +10,14 @@
 
             <template if:true={hasError}>
                 <div class="slds-text-color_error">{error}</div>
+            </template>
+
+            <template if:true={isChildrenTruncated}>
+                <div class="slds-notify slds-notify_alert slds-alert_warning"
+                     role="alert">
+                    Some hierarchy records are not displayed because the
+                    maximum of 200 children per level has been reached.
+                </div>
             </template>
 
             <template if:true={hasHierarchy}>

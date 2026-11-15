@@ -1,15 +1,17 @@
-
 public with sharing class GenericHierarchyController {
 
     private static final Integer MAX_LEVELS = 5;
+    private static final Integer MAX_CHILDREN_PER_LEVEL = 200;
+
     @TestVisible
-private static Boolean isAncestorAlreadyVisited(
-    Set<Id> visitedIds,
-    Id nextAncestorId
-) {
-    return nextAncestorId == null ||
-        visitedIds.contains(nextAncestorId);
-}
+    private static Boolean isAncestorAlreadyVisited(
+        Set<Id> visitedIds,
+        Id nextAncestorId
+    ) {
+        return nextAncestorId == null ||
+            visitedIds.contains(nextAncestorId);
+    }
+
     public class HierarchyNode {
         @AuraEnabled public Id recordId { get; set; }
         @AuraEnabled public String recordName { get; set; }
@@ -30,6 +32,7 @@ private static Boolean isAncestorAlreadyVisited(
         @AuraEnabled public String hierarchyName { get; set; }
         @AuraEnabled public List<String> displayFields { get; set; }
         @AuraEnabled public HierarchyNode root { get; set; }
+        @AuraEnabled public Boolean childrenTruncated { get; set; }
     }
 
     @AuraEnabled(cacheable=true)
@@ -40,9 +43,6 @@ private static Boolean isAncestorAlreadyVisited(
         if (recordId == null) {
             throw new AuraHandledException('Record ID is required.');
         }
-
-        Map<String, Schema.SObjectType> globalDescribe =
-            Schema.getGlobalDescribe();
 
         String actualObjectName =
             recordId.getSObjectType().getDescribe().getName();
@@ -96,15 +96,8 @@ private static Boolean isAncestorAlreadyVisited(
                 'The configuration object does not match the current record.'
             );
         }
-
-        if (!globalDescribe.containsKey(objectApiName)) {
-            throw new AuraHandledException(
-                'The configured Salesforce object does not exist.'
-            );
-        }
-
         Schema.DescribeSObjectResult objectDescribe =
-            globalDescribe.get(objectApiName).getDescribe();
+            recordId.getSObjectType().getDescribe();
 
         if (!objectDescribe.isAccessible()) {
             throw new AuraHandledException(
@@ -186,8 +179,11 @@ private static Boolean isAncestorAlreadyVisited(
 
         // Add Name to the query when available and accessible.
         // This prevents an unselected-field exception for recordName.
-        if (fieldMap.containsKey('Name') &&
-            fieldMap.get('Name').getDescribe().isAccessible()) {
+        Boolean canReadName =
+            fieldMap.containsKey('Name') &&
+            fieldMap.get('Name').getDescribe().isAccessible();
+
+        if (canReadName) {
             allSelectedFields.add('Name');
         }
 
@@ -264,11 +260,11 @@ private static Boolean isAncestorAlreadyVisited(
         );
 
         // Find the highest accessible ancestor within five levels.
-        // This uses a maximum of four bounded ancestor queries.
+        // Each of at most four iterations checks the current record and
+        // verifies that its parent is accessible before moving the root.
         Id rootId = recordId;
 
         Set<Id> ancestorIds = new Set<Id>{recordId};
-
         Id nextAncestorId;
 
         for (Integer depth = 1; depth < MAX_LEVELS; depth++) {
@@ -290,12 +286,30 @@ private static Boolean isAncestorAlreadyVisited(
             nextAncestorId =
                 (Id) currentRecords[0].get(parentField);
 
-           if (isAncestorAlreadyVisited(
-    ancestorIds,
-    nextAncestorId
-)) {
-    break;
-}
+            if (nextAncestorId == null) {
+                break;
+            }
+
+            if (isAncestorAlreadyVisited(
+                ancestorIds,
+                nextAncestorId
+            )) {
+                break;
+            }
+
+            // Verify that the parent is accessible before moving the root.
+            List<SObject> parentRecords = Database.queryWithBinds(
+                'SELECT Id FROM ' + objectApiName +
+                ' WHERE Id = :parentId LIMIT 1',
+                new Map<String, Object>{
+                    'parentId' => nextAncestorId
+                },
+                AccessLevel.USER_MODE
+            );
+
+            if (parentRecords.isEmpty()) {
+                break;
+            }
 
             ancestorIds.add(nextAncestorId);
             rootId = nextAncestorId;
@@ -315,6 +329,7 @@ private static Boolean isAncestorAlreadyVisited(
         Set<Id> processedIds = new Set<Id>();
 
         Set<Id> currentLevelIds = new Set<Id>{rootId};
+        Boolean childrenTruncated = false;
 
         // Retrieve and construct up to five hierarchy levels.
         for (Integer level = 1; level <= MAX_LEVELS; level++) {
@@ -365,9 +380,7 @@ private static Boolean isAncestorAlreadyVisited(
                 }
 
                 // Resolve the record title.
-                if (fieldMap.containsKey('Name') &&
-                    fieldMap.get('Name').getDescribe().isAccessible()) {
-
+                if (canReadName) {
                     node.recordName =
                         String.valueOf(record.get('Name'));
 
@@ -397,16 +410,23 @@ private static Boolean isAncestorAlreadyVisited(
                 break;
             }
 
-            // Retrieve children for the current level.
+            // Retrieve at most 200 children across this entire hierarchy level.
+            // Fetch one extra row to detect whether the result was truncated.
             List<SObject> childRecords = Database.queryWithBinds(
                 'SELECT Id, ' + parentField +
                 ' FROM ' + objectApiName +
-                ' WHERE ' + parentField + ' IN :parentIds',
+                ' WHERE ' + parentField + ' IN :parentIds' +
+                ' ORDER BY Id LIMIT ' + (MAX_CHILDREN_PER_LEVEL + 1),
                 new Map<String, Object>{
                     'parentIds' => currentLevelIds
                 },
                 AccessLevel.USER_MODE
             );
+
+            if (childRecords.size() > MAX_CHILDREN_PER_LEVEL) {
+                childrenTruncated = true;
+                childRecords.remove(childRecords.size() - 1);
+            }
 
             Set<Id> nextLevelIds = new Set<Id>();
 
@@ -459,7 +479,9 @@ private static Boolean isAncestorAlreadyVisited(
         response.hierarchyName = config.MasterLabel;
         response.displayFields = allDisplayFields;
         response.root = rootNode;
+        response.childrenTruncated = childrenTruncated;
 
         return response;
     }
+
 }

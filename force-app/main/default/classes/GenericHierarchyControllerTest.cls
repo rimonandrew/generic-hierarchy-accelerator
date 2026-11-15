@@ -648,4 +648,50 @@ private class GenericHierarchyControllerTest {
             'A null ancestor should stop traversal.'
         );
     }
+
+    // Verify that large child collections are limited and reported.
+    @IsTest
+    static void testChildLimitAndTruncationFlag() {
+
+        Account parent = new Account(
+            Name = 'Large Hierarchy Parent'
+        );
+        insert parent;
+
+        List<Account> children = new List<Account>();
+
+        for (Integer i = 1; i <= 201; i++) {
+            children.add(new Account(
+                Name = 'Large Hierarchy Child ' + i,
+                ParentId = parent.Id
+            ));
+        }
+
+        insert children;
+
+        Test.startTest();
+
+        GenericHierarchyController.HierarchyResponse result =
+            GenericHierarchyController.getHierarchy(
+                parent.Id,
+                'Account_Hierarchy'
+            );
+
+        Test.stopTest();
+
+        System.assertNotEquals(null, result);
+        System.assertNotEquals(null, result.root);
+
+        System.assertEquals(
+            200,
+            result.root.children.size(),
+            'Only 200 children should be returned.'
+        );
+
+        System.assertEquals(
+            true,
+            result.childrenTruncated,
+            'The response should indicate that additional children were omitted.'
+        );
+    }
 }
